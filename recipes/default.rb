@@ -44,6 +44,7 @@ end
 case node['platform_family']
 when "debian"
   dist = node['lsb']['codename']
+  id = node['lsb']['id'].downcase
   source =
     if major.nil? || major == '1'
       # version 1.x or no version
@@ -54,7 +55,7 @@ when "debian"
       end
     else
       # version 2.x or later
-      "http://packages.treasuredata.com/#{major}/ubuntu/#{dist}/"
+      "http://packages.treasuredata.com/#{major}/#{id}/#{dist}/"
     end
 
   apt_repository "treasure-data" do
