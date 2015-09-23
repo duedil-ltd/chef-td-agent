@@ -44,7 +44,7 @@ end
 case node['platform_family']
 when "debian"
   dist = node['lsb']['codename']
-  id = node['lsb']['id'].downcase
+  platform = node["platform"]
   source =
     if major.nil? || major == '1'
       # version 1.x or no version
@@ -55,11 +55,12 @@ when "debian"
       end
     else
       # version 2.x or later
-      "http://packages.treasuredata.com/#{major}/#{id}/#{dist}/"
+      "http://packages.treasuredata.com/#{major}/#{platform}/#{dist}/"
     end
 
   apt_repository "treasure-data" do
     uri source
+    arch node["td_agent"]["apt_arch"]
     distribution dist
     components ["contrib"]
     key "https://packages.treasuredata.com/GPG-KEY-td-agent"
@@ -81,10 +82,12 @@ when "rhel"
   end
 end
 
+reload_action = (reload_available?) ? :reload : :restart
+
 template "/etc/td-agent/td-agent.conf" do
   mode "0644"
   source "td-agent.conf.erb"
-  notifies :restart, "service[td-agent]"
+  notifies reload_action, "service[td-agent]"
 end
 
 directory "/etc/td-agent/conf.d" do
@@ -118,5 +121,6 @@ node["td_agent"]["plugins"].each do |plugin|
 end
 
 service "td-agent" do
+  supports :restart => true, :reload => (reload_action == :reload), :status => true
   action [ :enable, :start ]
 end
