@@ -96,6 +96,7 @@ directory "/etc/td-agent/conf.d" do
 end
 
 package "td-agent" do
+  ignore_failure true
   if node["td_agent"]["pinning_version"]
     action :install
     version node["td_agent"]["version"]
